@@ -48,8 +48,8 @@ $D = \sum(\sin(Hdg_i)\cos(Hdg_i)VogE_i - \sin(Hdg_i)^2VogN_i)$ <br>
 $E = \sum(\sin(Hdg_i)\cos(Hdg_i)VogN_i - \cos(Hdg_i)^2VogE_i)$ <br>
 $F = \sum(VogN_i\sin(Hdg_i)-VogE_i\cos(Hdg_i))^2$ <br>
 
-$mmsiSumValue = \left\{value_{mmsi_0}, value_{mmsi_1}, ... , value_{mmsi_n}\right\}$ <br>
-$value_{mmsi_j} = \left\{C, -B, A, D, E, F\right\}$ <br>
+$mmsiSumValue = \{value_{mmsi_0}, value_{mmsi_1}, ... , value_{mmsi_n}\}$ <br>
+$value_{mmsi_j} = \{C, -B, A, D, E, F\}$ <br>
 $F1 = -(D\cos(\theta _1) + E\sin(\theta _1))/\lambda _1$ <br>
 $F2 = -(D\cos(\theta _2) + E\sin(\theta _2))/\lambda _2$ <br>
 
