@@ -1,5 +1,5 @@
-# Table of Content
-- [Table of Content](#table-of-content)
+# Table of Contents
+- [Table of Contents](#table-of-contents)
 - [Introduction](#introduction)
 - [How It Works](#how-it-works)
   - [事前準備](#事前準備)
@@ -26,19 +26,14 @@ git submodule update -i
 JCOPEデータを範囲xxx~xxxで1マス1/36度で偏流値のcsvファイルを用意する．
 
 **AISデータの用意**
-A1～A5までのProgram.exeを実行する．
-実行例
-```
-cd ~/nmri/NMEA0183_decorder/AIS_Decorder
-A1-AIS_ToyoJAXAFileoutToAis1/Program.exe $(ls ../../data/ais/*/log/*.log | sort -V)
-```
+NMEA0183_decorder/READEME.md内How It Worksを実施する．
 
 **評価用データの用意**
 評価用データとして，船のログから計算した偏流値を使用する．偏流値の作成手順は以下のようにする．
 1. 船のログ内の必要なNMEAデータを抜き出したファイルslog1を作成する.
 ```
 cd ~/nmri/NMEA0183_decorder
-S1-ShipLogToS1/Program.exe ...
+S1-ShipLogToS1/Program.exe {ShiplogDir}/*.log
 ```
 2. slog1ファイルから偏流値を計算し，csvファイルに書き出す
 ```
