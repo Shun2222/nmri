@@ -78,6 +78,8 @@ class ParameterManager():
             self.get_kalman_param()
         elif self.param_name=='analysis':
             self.get_analysis_param()
+        elif self.param_name=='shipLog':
+            self.get_shipLog_param()
         #else:
             #self.get_area_param()
         return self.params
@@ -120,4 +122,7 @@ class ParameterManager():
         kurosio_lon_range = ast.literal_eval(self.config_get_set_param(AREA, "KUROSIO_LON_RANGE"))
         PATH_AIS = path_ais = json.loads(self.config_get_set_param(AREA, "PATH_AIS"))
         PATH_JCOPE = path_jcope = json.loads(self.config_get_set_param(AREA, "PATH_JCOPE"))
+    
+    def get_shipLog_param(self):
+        self.get_kalman_param()
 

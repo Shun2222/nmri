@@ -4,6 +4,7 @@ import pickle as pkl
 import math
 import os 
 import os.path as osp
+import matplotlib.pyplot as plt
 
 from utils.utils import *
 from utils.utils_needed_params import *
@@ -26,6 +27,8 @@ class AISLoader:
         if keys==None:
             keys = self.keys
 
+        #assert pool_size==3, f"Not match pool size (pool_size={pool_size})"
+        #path = r"E:\shunsukeE\data\ais\ais_remove_badmmsi_pool3/" 
         path = r"E:\shunsukeE\data\ais\ais_remove_badmmsi/" 
         pathes = {}
         for key in keys:
@@ -94,7 +97,7 @@ class AISLoader:
                     try:
                         ais_data[dtidx] = pd.read_csv(ais_path[dtidx], encoding="cp932", header=None)
                         ais_data[dtidx] = ais_data[dtidx].values
-                        ais_data[dtidx] = average_pooling(ais_data[dtidx], pool_size=(pool_size, pool_size))
+                        #ais_data[dtidx] = average_pooling(ais_data[dtidx], pool_size=(pool_size, pool_size))
                     except:
                         print(f'Error load {ais_path[dtidx]}')
             return ais_data
@@ -104,11 +107,11 @@ class AISLoader:
             data[key] = load_ais_data(self.pathes[key]) 
         return data
 
-    # Ais4v2ToCur.py 内のAISLoaderと関数名を合わせるため
-    def load_cur(self, dtidx, keys=None, use_pool=True):
+    # TODO Ais4v2ToCur.py 内のAISLoaderと関数名を合わせるため
+    def load_cur(self, dtidx, keys=None, use_pool=False):
         return self.load_ais_dtidx(dtidx, keys, use_pool)
 
-    def load_ais_dtidx(self, dtidx, keys=None, use_pool=True):
+    def load_ais_dtidx(self, dtidx, keys=None, use_pool=False):
         if keys==None:
             keys = self.keys
 
@@ -118,7 +121,7 @@ class AISLoader:
                 #print(f"load from {ais_path[dtidx]}")
                 try:
                     ais_data = pd.read_csv(ais_path[dtidx], encoding="cp932", header=None)
-                    ais_data = ais_data.values
+                    ais_data = np.array(ais_data.values)
                     # TODO 信頼度の加重平均にすべき
                     if use_pool:
                         ais_data = average_pooling(ais_data, pool_size=(pool_size, pool_size))
@@ -130,16 +133,27 @@ class AISLoader:
         for key in keys:
             data[key] = load_ais_data(self.pathes[key]) 
         return data
+        
 
-if __name__=='__main__':
+def test():
     al = AISLoader(2015, 9)
-    keys = ['lambda1']
-    al.load_path(keys=keys)
-    #path_cur1 = al.pathes['cur1']
-    #print(f'path num: {len(path_cur1)}')
-    #print(f'expample keys:{path_cur1.keys()},\n val0: {path_cur1[0]}')
+    keys = ['cur1', 'cur2', 'lambda1', 'lambda2']
+    al.set_keys(keys)
+    al.load_path(keys)
 
-    #data = al.load_ais_day(1)
+    # data test
+    res = al.load_ais_dtidx(10)
+    data = res['cur1']
+    print(data)
+    print(data.shape)
+    plt.imshow(data)
+    plt.show()
+
+    data[0][0] = 100
+    plt.imshow(data)
+    plt.show()
+
+    # load test
     print(f'Testing loading data')
     for i in range(667):
         a = al.load_ais_dtidx(i)

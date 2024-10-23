@@ -1,0 +1,3 @@
+[submodule "NMEA0183_decorder"]
+	path = NMEA0183_decorder
+	url = https://github.com/shun2222/NMEA0183_decorder.git

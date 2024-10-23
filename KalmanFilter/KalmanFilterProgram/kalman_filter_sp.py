@@ -31,7 +31,7 @@ def kalman_filter():
         print(f'use ais removed bad mmsi to calc ais cur')
         
     for Q_value in Q_values:
-        save_dir = path_save+f"{Q_value}" # データの保存先
+        save_dir = path_save+f"-Q{Q_value}" # データの保存先
         atc.svm.set_out_folder(save_dir) # 船毎の分散のリセット
         pm.clear()
 

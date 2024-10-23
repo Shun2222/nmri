@@ -56,7 +56,7 @@ class JCOPELoader:
 
         return jcope_n, jcope_e
 
-if __name__=='__main__':
+def test():
     jl = JCOPELoader(2015, 9)
     path_jcope = fr'E:\shunsukeE\data\eas2'
     jl.load_path(path_jcope)
@@ -64,4 +64,16 @@ if __name__=='__main__':
     jcope_n, jcope_e = jl.load_jcope_day(day)
     print(jcope_n.keys())
     print(jcope_e.keys())
+
+    data = jcope_n[1]
+    print(data)
+    print(data.shape)
+    plt.imshow(data)
+    plt.show()
+
+    for i in range(1000):
+        for j in range(50):
+            data[i][j] = 100
+    plt.imshow(data)
+    plt.show()
     

@@ -124,7 +124,7 @@ def calc_kde(prob_datas, num_agent=1000):
 
 ### for nmri programs ###
 def get_project_name():
-    project_names = ['analysis', 'kalman_filter', 'Ais4', 'test']
+    project_names = ['analysis', 'kalman_filter', 'Ais4', 'shipLog', 'test']
     res = is_imported_file(project_names)
     sum_res = 0
     detected_project = []
@@ -158,7 +158,7 @@ def azimuth_to_radian(azimuth):
     radian = radian*np.pi/180
     return radian
 
-def latlon_to_mesh(lat, lon, deg_per_mesh, map_size, latlon_range=[20-1/36, 117-1/36]):
+def latlon_to_mesh(lat, lon, map_size, deg_per_mesh=1/36, latlon_range=[20-1/36, 117-1/36]):
     # lat, lon -> [lon, lat]
     grid0 = map_size[0] - int((lat-latlon_range[0])/deg_per_mesh)
     grid1 = int((lon-latlon_range[1])/deg_per_mesh)

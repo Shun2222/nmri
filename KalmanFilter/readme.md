@@ -1,10 +1,9 @@
 # Readme
 ## 軸について
-方位$\phi$をNを基準とした時計回りであり，<br>
-Nをx軸，Eをy軸とすると，$\theta = \pi/2 - \phi$となり，<br>
-$\sin(\phi) = \cos(\theta), \cos(\phi) = \sin(\theta)$であるため，<br>
-方位の値を$\sin$でN方向，$\cos$でE方向になる <br>
-NE方向を固有値方向$\psi$に変換するには$F_1 = N\cdot \cos(\psi _1) + E\cdot \sin(\psi _1)$
+方位$\phi$をNを基準とした時計回りとし，<br>
+Nをx軸，Eをy軸とすると，$\theta = \phi$となり，<br>
+方位の値を$\cos$でN方向，$\sin$でE方向になる <br>
+# AISデータによる偏流の計算式
 ## 船単位のデータで偏流計算
 $A = \sum\sin(Hdg_i)^2$ <br>
 $B = \sum-\sin(Hdg_i)\cos(Hdg_i)$ <br>
@@ -57,3 +56,7 @@ $F2 = -(D\cos(\theta _2) + E\sin(\theta _2))/\lambda _2$ <br>
 $\psi _1 = \frac{1}{2} \arctan (\sum w_i \sin 2\theta_i / \sum w_i \cos 2\theta_i)$ <br>
 $\psi _2 = \psi _1 + \pi/2$ <br>
 $\lambda_{1,2} = \frac{1}{2}(\sum w_i \mp \sqrt((\sum w_i \sin 2\theta_i)^2+(\sum w_i \cos 2\theta_i)^2))$ <br>
+
+# 船のログによる偏流値の計算式
+$curN = SOG \times \cos(COG) - SOW \times \sin(HDG)$<br>
+$curE = SOG \times \sin(COG) - SOW \times \cos(HDG)$

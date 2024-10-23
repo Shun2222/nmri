@@ -16,6 +16,8 @@ elif 'analysis' in project:
     from .analysis_parameters import *
 elif 'Ais4' in project:
     from .kalman_parameters import *
+elif 'shipLog' in project:
+    from .shipLog_parameters import *
 elif 'kernel' in project:
     from .analysis_parameters import *
 else:

@@ -1,4 +1,5 @@
 import pickle as pkl
+import japanize_matplotlib
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
@@ -30,7 +31,7 @@ kalman_keys = ['X', 'JCOPE', 'Z', 'Target']
 if not use_ais_removed_bad_mmsi:
     ais_keys = ['n', 'e']
 else:
-    ais_keys = ['N', 'E']
+    ais_keys = ['N', 'E', 'lambda1']
 
 
 def plot_mappedData(kl, al, target_day, target_hour, filter_latlon=None, filter_range=30, filter=False):
@@ -562,8 +563,9 @@ def analysis(plot=True, diff=True, save_gif=True, save_point_graph=True):
         al = AISLoader(year, month)
         al.set_keys(ais_keys)
         al.load_path()
-    #eval_ais(kl, al)
-    #return
+
+    eval_ais(kl, al)
+    return
 
     keys = ['kalman-n', 'kalman-e', 'jcope-n', 'jcope-e', 'diff-kalman-jcope-n', 'diff-kalman-jcope-e', 'ais-n', 'ais-e']
     if plot:
@@ -616,10 +618,19 @@ def analysis(plot=True, diff=True, save_gif=True, save_point_graph=True):
         diff_results(kl, al)
 
 def eval_ais(kl, al):
+    # 船のpathの設定
     files = os.listdir(path_ship)
-    target_ships = dirs = [f for f in files if os.path.isdir(os.path.join(path_ship, f))]
+    # path内にあるファイルの一覧取得
+    target_ships = dirs = [f for f in files if os.path.isdir(os.path.join(path_ship, f))] 
 
-    df_as = []
+    # aisと船の偏流値の差の大きさ(|ais-ship|)
+    df_as = {   "Dtidx":[],
+                "ShipName":[],
+                "N":[],
+                "E":[],
+            }
+    df_as_grid = [np.zeros(nan_map_pooled.shape) for _ in range(2)]
+    count_grid = np.zeros(nan_map_pooled.shape)
     dtidxs = []
     grids = []
     diff_ship = {}
@@ -634,10 +645,12 @@ def eval_ais(kl, al):
         for target_ship in target_ships:
             available_count = 0
             print(f'{target_ship} {dt_month:02}{day:02}')
+            # 無視する船はスキップ
             if target_ship in done_ship:
                 print(f'skip {target_ship}')
                 continue
 
+            # 船のログの読み込み
             f_name = fr'cur_hours{dt_year}{dt_month:02}{day:02}.csv'
             #f_name = fr'cur_minutes{dt_year}{dt_month:02}{day:02}.csv'
             f_path = osp.join(path_ship, target_ship, '2015', f_name)
@@ -662,6 +675,7 @@ def eval_ais(kl, al):
 
             diffs = []
             for i in range(len(shipLog)):
+                # 船のログの格納
                 time = shipLog['DtIdx'].values[i]
                 grid0 = shipLog['Grid0'].values[i]
                 grid1 = shipLog['Grid1'].values[i]
@@ -671,29 +685,35 @@ def eval_ais(kl, al):
                 grids.append([grid0, grid1])
                 dtidx = time
 
+                # グリッド座標の計算
                 grid0 = int(grid0/pool_size)
                 grid1 = int(grid1/pool_size)
                 # if not kurosio_pooled(grid0, grid1):
+
+                # エリア内にいるかのチェック
                 if not kurosio_map_tf_pooled[grid0][grid1]:
                     print(f'Not Kurosio area ( grid = ({grid0},{grid1}) ).')
                     continue
+
+                # エリア内かつ海であるかのチェック
                 idx = int(kurosio_index_pooled[grid0][grid1])
-
-                if dtidx<0:
-                    print(f'Out of dtidx ( dtidx = {dtidx}) ).')
-                    continue
-
                 if idx==-1:
                     print(f'Out of idx ( grid = ({grid0},{grid1}) ).')
                     continue
 
+                # 時間のチェック(下限)
+                if dtidx<0:
+                    print(f'Out of dtidx ( dtidx = {dtidx}) ).')
+                    continue
+
+                # 時間のチェック(上限)
                 dt = dtidx_to_date(base_dt, int(dtidx))
                 hour = dt.hour
                 if day>MAX_DAY :
                     continue
                 if day==MAX_DAY and hour>MAX_HOUR:
                     continue
-                    
+                # 例外の時間
                 if day==1 and hour==0:
                     continue
 
@@ -712,19 +732,95 @@ def eval_ais(kl, al):
                     lambda1 = ais_data["lambda1"]
                     lambda1 = lambda1[grid0][grid1]
                     
+                    # nanでなく，固有値が一定以上の場合で比較する
                     if not (ais_cur1==ais_cur1 and ais_cur2==ais_cur2):
                         print(f"ais is Nan")
-                    elif not lambda1 > 10:
-                        print(f"lambda1 is low {lambda1}, cur: {ais_cur1}, {ais_cur2}")
+                        continue
+                    #elif not lambda1 > 10:
+                    #    print(f"lambda1 is low {lambda1}, cur: {ais_cur1}, {ais_cur2}")
+                    #    continue
+                    else:
+                        df_as["Dtidx"].append(dtidx)
+                        df_as["ShipName"].append(target_ship)
+                        df_as["N"].append(ais_cur1-curN)
+                        df_as["E"].append(ais_cur2-curE)
+                        df_as_grid[0][grid0][grid1] += np.abs(ais_cur1-curN)
+                        df_as_grid[1][grid0][grid1] += np.abs(ais_cur2-curE)
+                        count_grid[grid0][grid1] += 1 
+                        print(f'ais: N={ais_cur1}, E={ais_cur2}')
+                        print(f'ship: N={curN}, E={curE}')
 
-                    if lambda1 > 10 and ais_cur1==ais_cur1 and ais_cur2==ais_cur2:
-                    #if ais_cur1==ais_cur1 and ais_cur2==ais_cur2:
-                        df_as.append([ais_cur1-curN, ais_cur2-curE])
-
+                    # ログの出力
                     if len(df_as)>0:
-                        print(f'as: {np.mean(np.abs(df_as))}, ndata={len(df_as)}')
+                        N = np.array(df_as["N"])
+                        E = np.array(df_as["E"])
+                        n_df_data = len(N)
+                        print(f'as: N={np.mean(np.abs(N))}, E={np.mean(np.abs(E))}, ndata={n_df_data}')
 
-    print(f'as: {np.mean(np.abs(df_as))}, ndata={len(df_as)}')
+    # データの整理
+    dtidxs = np.array(df_as["Dtidx"])
+    shipName = np.array(df_as["ShipName"])
+    N = np.array(df_as["N"])
+    E = np.array(df_as["E"])
+    tf = count_grid>0
+    df_as_grid[0][tf] /= count_grid[tf]
+    df_as_grid[1][tf] /= count_grid[tf]
+
+    # 性能の結果
+    print(f'as: N={np.mean(np.abs(N))}, E={np.mean(np.abs(E))}, ndata={len(df_as)}')
+
+    # 時間の違いの性能の結果
+    plt.figure()
+    plt.scatter(dtidxs, N, label="North")
+    plt.scatter(dtidxs, E, label="East")
+    plt.legend()
+    savepath = "./logs/analysis_diff-ais-ship_dtidx.png"
+    plt.savefig(savepath)
+
+    # 船の違いの性能の結果
+    plt.figure(figsize=(16, 16))
+    N2 = []
+    E2 = []
+    for target_ship in target_ships:
+        tf = shipName == target_ship
+        N2.append(np.mean(np.abs(N[tf])))
+        E2.append(np.mean(np.abs(E[tf])))
+    x = np.arange(len(target_ships))
+    width = 0.4
+    plt.bar(x-width/2, N2, color='b', label="North", tick_label=target_ships)
+    plt.bar(x+width/2, E2, color='r', label="East", tick_label=target_ships)
+    plt.legend()
+    savepath = "./logs/analysis_diff-ais-ship_shipname.png"
+    plt.savefig(savepath)
+
+    # 船ごとの使用したデータ数
+    plt.figure(figsize=(16, 16))
+    counts = []
+    for target_ship in target_ships:
+        tf = shipName == target_ship
+        counts.append(np.sum(tf))
+    plt.bar(target_ships, counts, color='b')
+    savepath = "./logs/analysis_shipDataNum.png"
+    plt.savefig(savepath)
+
+    # 座標の違いの性能の結果
+    plt.figure()
+    fig, axes = plt.subplots(1, 3)
+    im = axes[0].imshow(df_as_grid[0])
+    fig.colorbar(im, ax=axes[0])
+
+    im = axes[1].imshow(df_as_grid[1])
+    fig.colorbar(im, ax=axes[1])
+
+    im = axes[2].imshow(count_grid)
+    fig.colorbar(im, ax=axes[2])
+
+    axes[0].set_title("North")
+    axes[1].set_title("East")
+    axes[2].set_title("Num of Data")
+    savepath = "./logs/analysis_diff-ais-ship_grid.png"
+    plt.savefig(savepath)
+
 
 if __name__ == '__main__':
     analysis()

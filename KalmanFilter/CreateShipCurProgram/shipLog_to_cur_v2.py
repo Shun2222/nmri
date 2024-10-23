@@ -11,7 +11,6 @@ import math
 import os 
 import os.path as osp
 import re
-import logtext
 
 import warnings
 warnings.simplefilter('ignore')
@@ -21,11 +20,9 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 sns.set(style="whitegrid", palette="muted", color_codes=True)
 
+import utils.logtext
 from utils import *
-from kf_params import *
 
-path = r"E:\shunsukeE\data\shiplog/"
-files = os.listdir(path)
 #dirs = [f for f in files if os.path.isdir(os.path.join(path, f))]
 """target_ships  = {'中春': '中春丸',
                 '2辰巳': '第二辰巳丸',
@@ -156,27 +153,63 @@ def divide_nmea(log_data):
     # hdtデータの抽出
     hdt = log_data[log_data["NMEA"]=="HDT"]
     hdt = hdt.drop('data2', axis=1)
-    hdt.columns = ['UTC', 'NMEA', 'HeadDeg', 'DtIdx', 'DtIdx_Minute']
+    hdt.columns = ['UTC', 'NMEA', 'HDG', 'DtIdx', 'DtIdx_Minute']
 
     # vtgデータの抽出    
     vtg = log_data[log_data["NMEA"]=="VTG"]
-    vtg.columns = ['UTC', 'NMEA', 'HeadDeg', 'GroundSpeed', 'DtIdx', 'DtIdx_Minute']
+    vtg.columns = ['UTC', 'NMEA', 'COG', 'SOG', 'DtIdx', 'DtIdx_Minute']
 
-    # vtgデータの抽出
+    # vhwデータの抽出
     vhw = log_data[log_data["NMEA"]=="VHW"]
-    vhw.columns = ['UTC', 'NMEA', 'HeadDeg', 'WaterSpeed', 'DtIdx', 'DtIdx_Minute']
+    vhw.columns = ['UTC', 'NMEA', 'HDG', 'WaterSpeed', 'DtIdx', 'DtIdx_Minute']
     
     # データ処理
     delete_time_nmri = {}
-    stop_knot = 0.5
+    stop_knot = 0.5 # AIS処理では8knotが基準
     
-    # vtgデータ処理
+    # vtgデータ処理 (SOG > 0.0)
+    ## 一定以下のknotは排除
     prev_dt = set(vtg['DtIdx_Minute'].values)
-    tf = vtg['GroundSpeed']>stop_knot
+    tf = vtg['SOG']>stop_knot
     vtg = vtg[tf]
     delete_time_nmri['VTG'] = prev_dt - set(vtg['DtIdx_Minute'].values)
 
-    # vbwのデータ処理
+    ## 各速度が10度/分より大きければ，その時間の前後10分のデータを消去
+    prev_dt = set(vtg['DtIdx_Minute'].values)
+    time_set = sorted(set(vtg["DtIdx_Minute"]))
+    delete_range = 10
+    thres = (10/180)*np.pi
+    for i in range(len(time_set)-1):
+            vtg1 = vtg[time_set[i] == vtg["DtIdx_Minute"]]
+            vtg2 = vtg[time_set[i+1] == vtg["DtIdx_Minute"]]
+            
+            vtg1 = remove_outlier(vtg1, 'COG')
+            vtg2 = remove_outlier(vtg2, 'COG')
+            
+            headRat1 = deg_to_rat(vtg1['COG'])
+            sin1 = np.mean(np.sin(headRat1))
+            cos1 = np.mean(np.cos(headRat1))
+            
+            headRat2 = deg_to_rat(vtg2['COG'])
+            sin2 = np.mean(np.sin(headRat2))
+            cos2 = np.mean(np.cos(headRat2))
+
+            delta_theta = np.arccos(sin1*sin2 + cos1*cos2)
+            omega = delta_theta/(time_set[i+1]-time_set[i])
+            
+            time = time_set[i]
+            if np.abs(omega)>thres:
+                tf = vtg['DtIdx_Minute']!=time
+                vtg = vtg[tf]
+                for j in range(1, 10):
+                    tf = vtg['DtIdx_Minute']!=time-j
+                    vtg = vtg[tf]
+                    tf = vtg['DtIdx_Minute']!=time+j
+                    vtg = vtg[tf]
+    delete_time_nmri['VTG'] = prev_dt - set(vtg['DtIdx_Minute'].values)
+
+    # vbwのデータ処理 (LonWaterSpeed > 0.0, TraWaterSpeed not exist)
+    ## 一定以下のknotは排除
     prev_dt = set(vbw['DtIdx_Minute'].values)
     tf = vbw['LonWaterSpeed']!=-999.0
     vbw = vbw[tf] 
@@ -185,6 +218,7 @@ def divide_nmea(log_data):
     delete_time_nmri['VBW'] = prev_dt - set(vbw['DtIdx_Minute'].values)
     
     # hdtデータ処理
+    ## 各速度が10度/分より大きければ，その時間の前後10分のデータを消去
     prev_dt = set(hdt['DtIdx_Minute'].values)
     time_set = sorted(set(hdt["DtIdx_Minute"]))
     delete_range = 10
@@ -193,14 +227,14 @@ def divide_nmea(log_data):
             hdt1 = hdt[time_set[i] == hdt["DtIdx_Minute"]]
             hdt2 = hdt[time_set[i+1] == hdt["DtIdx_Minute"]]
             
-            hdt1 = remove_outlier(hdt1, 'HeadDeg')
-            hdt2 = remove_outlier(hdt2, 'HeadDeg')
+            hdt1 = remove_outlier(hdt1, 'HDG')
+            hdt2 = remove_outlier(hdt2, 'HDG')
             
-            headRat1 = deg_to_rat(hdt1['HeadDeg'])
+            headRat1 = deg_to_rat(hdt1['HDG'])
             sin1 = np.mean(np.sin(headRat1))
             cos1 = np.mean(np.cos(headRat1))
             
-            headRat2 = deg_to_rat(hdt2['HeadDeg'])
+            headRat2 = deg_to_rat(hdt2['HDG'])
             sin2 = np.mean(np.sin(headRat2))
             cos2 = np.mean(np.cos(headRat2))
 
@@ -217,7 +251,9 @@ def divide_nmea(log_data):
                     tf = hdt['DtIdx_Minute']!=time+j
                     hdt = hdt[tf]
     delete_time_nmri['HDT'] = prev_dt - set(hdt['DtIdx_Minute'].values)
+
     # vhwデータ処理
+    ## 一定以下のknotは排除
     prev_dt = set(vhw['DtIdx_Minute'].values)
     tf = vhw['WaterSpeed']!=-999.0
     vhw = vhw[tf]
@@ -291,7 +327,7 @@ def cur_nmea(gga, vbw, hdt, vtg):
             continue
 
         # HDTから船首方位取得
-        headRat = deg_to_rat(hdt1['HeadDeg'])
+        headRat = deg_to_rat(hdt1['HDG'])
         sin1 = np.mean(np.sin(headRat))
         cos1 = np.mean(np.cos(headRat))
         
@@ -304,25 +340,25 @@ def cur_nmea(gga, vbw, hdt, vtg):
             continue
 
         # VTGから船首方位・対地船速取得
-        g_headRat = deg_to_rat(vtg1['HeadDeg'])
+        g_headRat = deg_to_rat(vtg1['COG'])
         g_sin1 = np.mean(np.sin(g_headRat))
         g_cos1 = np.mean(np.cos(g_headRat))
-        ground_speed = np.mean(remove_outlier(vtg1, 'GroundSpeed')['GroundSpeed'])
+        ground_speed = np.mean(remove_outlier(vtg1, 'SOG')['SOG'])
         if not ground_speed==ground_speed:
             print('not enought vtg data')
             logtext.add_text('not enought vtg')
             continue
 
         # 偏流の計算
-        curN.append(ground_speed*g_sin1 - water_speed*sin1)
-        curE.append(ground_speed*g_cos1 - water_speed*cos1)
+        curN.append(ground_speed*g_cos1 - water_speed*cos1)
+        curE.append(ground_speed*g_sin1 - water_speed*sin1)
         #curN.append(-water_speed*sin1 + ground_speed*g_sin1)
         #curE.append(-water_speed*cos1 + ground_speed*g_cos1)
-        print(f'N {ground_speed*g_sin1 - water_speed*sin1}')
-        print(f'E {ground_speed*g_cos1 - water_speed*cos1}')
+        print(f'N {curN[-1]}')
+        print(f'E {curE[-1]}')
         
         # Gridの位置計算
-        grid0, grid1 = latlon_to_mesh(lat1, lon1)
+        grid0, grid1 = latlon_to_mesh(lat1, lon1, map_size=map_size_jcope)
 
         grids0.append(grid0)
         grids1.append(grid1)
@@ -407,9 +443,9 @@ def cur_minute_to_hour(grid_cur_m):
     grid_cur["Lon"] = lons
     return grid_cur
 
-if __name__ == '__main__':
-    # 対象の日付
-    target_days = [18]
+def run():
+    path = r"E:\shunsukeE\data\shiplog/"
+    files = os.listdir(path)
     for target_ship in target_ships.keys():
         logtext.clear()
         logtext.add_text(f'{target_ship}')
@@ -422,8 +458,8 @@ if __name__ == '__main__':
 
         # パスの設定
         patterns = []
-        #for day in range(1, n_day+1):
-        for day in target_days:
+        for day in range(1, n_day+1):
+        #for day in target_days:
             patterns.append(fr'(\w+){month:02}{day:02}.slog1')
         forbid_patterns = [fr'(\w+).slog1err']
         path2 = osp.join(path, target_ship, '2015')
