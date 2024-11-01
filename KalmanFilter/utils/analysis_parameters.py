@@ -21,6 +21,9 @@ DAY = json.loads(params["DAY"])
 HOUR = json.loads(params["HOUR"])
 MAX_DAY = json.loads(params["MAX_DAY"])
 MAX_HOUR = json.loads(params["MAX_HOUR"])
+AIS_JCOPE_TEST = shipLog_analysis = json.loads(params["AIS_JCOPE_TEST"])
+VISUALIZE = shipLog_analysis = json.loads(params["VISUALIZE"])
+EVALUATION = shipLog_analysis = json.loads(params["EVALUATION"])
 
 # AREA params
 AREA = params["AREA"]

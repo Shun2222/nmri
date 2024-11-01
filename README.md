@@ -23,6 +23,22 @@ git clone https://github.com/shun2222/nmri.git
 git submodule update -i
 ```
 
+**環境構築 (Anaconda推奨)**
+- Docker
+```
+cd ~/workspace/nmri/KalmanFilter/DockerFile
+docker build --target base -t kalmanfilter -f Dockerfile.base .
+docker run -it --rm --name kalmanfilter_container -v /mnt/shunsukeUeki:/mnt/shunsukeUeki kalmanfilter /bin/bash
+docker exec -it kalmanfilter_container /bin/bash
+```
+
+- Anaconda
+```
+cd ~/workspace/nmri/KalmanFilter/AnacondaFile
+conda env create -n kalmanfilter -f kalmanfilter.yaml
+conda activate kalmanfilter 
+```
+
 **衛星データの用意**
 JCOPEデータを範囲xxx~xxxで1マス1/36度で偏流値のcsvファイルを用意する．
 
@@ -44,21 +60,6 @@ python -m CreateShipCurProgram
 (csvファイルの内容はtidx, UTC, CurN, CurE, Grid0, Grid1, Lat, Lonの順で各行出力される.)
 
 ## プログラムの実施例
-**環境構築 (Anaconda推奨)**
-- Docker
-```
-cd ~/workspace/nmri/KalmanFilter/DockerFile
-docker build --target base -t kalmanfilter -f Dockerfile.base .
-docker run -it --rm --name kalmanfilter_container -v /mnt/shunsukeUeki:/mnt/shunsukeUeki kalmanfilter /bin/bash
-docker exec -it kalmanfilter_container /bin/bash
-```
-
-- Anaconda
-```
-cd ~/workspace/nmri/KalmanFilter/AnacondaFile
-conda kalmanfilter create -f kalmanfilter.yaml
-conda activate kalmanfilter 
-```
 
 **パラメータ設定**
 パラメータは`config/config.ini`内の

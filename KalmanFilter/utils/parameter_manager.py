@@ -105,6 +105,9 @@ class ParameterManager():
         HOUR = int(json.loads(self.config_get_set_param("ANALYSIS_PARAM", "HOUR")))
         MAX_DAY = int(json.loads(self.config_get_set_param("ANALYSIS_PARAM", "MAX_DAY")))
         MAX_HOUR = int(json.loads(self.config_get_set_param("ANALYSIS_PARAM", "MAX_HOUR")))
+        AIS_JCOPE_TEST = int(json.loads(self.config_getboolean_set_param("ANALYSIS_PARAM", "AIS_JCOPE_TEST")))
+        VISUALIZE = int(json.loads(self.config_getboolean_set_param("ANALYSIS_PARAM", "VISUALIZE")))
+        EVALUATION = int(json.loads(self.config_getboolean_set_param("ANALYSIS_PARAM", "EVALUATION")))
 
         AREA = load_json_line_value(osp.join(path_log, 'progress.json'), "AREA")[0]
         if AREA[0]=='"':

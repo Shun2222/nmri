@@ -216,7 +216,7 @@ def plot_mappedData(kl, al, target_day, target_hour, filter_latlon=None, filter_
     print(f"Finished saving mapped date.")
     return n_map, e_map, jn_map, je_map, kjn_map, kje_map, an_map, ae_map, point_map
 
-def diff_results2(kl):
+def eval_kalmanLog2(kl):
     if is_light:
         TFs = None
         n_data = -1
@@ -385,7 +385,7 @@ def diff_results2(kl):
            [np.mean(np.abs(df_aj)), np.mean(np.abs(df_ak)),np.mean(np.abs(df_as)),np.mean(np.abs(df_kj)),np.mean(np.abs(df_sj)),np.mean(np.abs(df_ks)),],\
            [len(df_aj), len(df_ak),len(df_as),len(df_kj),len(df_sj),len(df_ks)]
 
-def diff_results(kl, al):
+def eval_kalmanLog(kl, al):
     data = kl.load_kalmanLog_day(1, s, keys=['X'])
 
     files = os.listdir(path_ship)
@@ -548,7 +548,7 @@ def diff_results(kl, al):
            [np.mean(np.abs(df_aj)), np.mean(np.abs(df_ak)),np.mean(np.abs(df_as)),np.mean(np.abs(df_kj)),np.mean(np.abs(df_sj)),np.mean(np.abs(df_ks)),],\
            [len(df_aj), len(df_ak),len(df_as),len(df_kj),len(df_sj),len(df_ks)]
 
-def analysis(plot=True, diff=True, save_gif=True, save_point_graph=True):
+def analysis():
     kl = KalmanLogLoader(2015, 9, 20)
     kl.set_path(path_log)
 
@@ -567,19 +567,18 @@ def analysis(plot=True, diff=True, save_gif=True, save_point_graph=True):
         al.set_keys(ais_keys)
         al.load_path()
 
-    eval_ais(kl, al)
-    eval_jcope(kl, jl)
-    return
+    if AIS_JCOPE_TEST: 
+        eval_ais(al)
+        eval_jcope(jl)
+        return
 
     keys = ['kalman-n', 'kalman-e', 'jcope-n', 'jcope-e', 'diff-kalman-jcope-n', 'diff-kalman-jcope-e', 'ais-n', 'ais-e']
-    if plot:
+    if VISUALIZE:
+        save_gif = True
+        save_point_graph = True
+
         m_day = 2 if MAX_DAY==1 else MAX_DAY
         for day in range(1, MAX_DAY+1):
-            # lat00 = int(map_pooled_size[0]-kurosio_latidx_range1[0]/pool_size)
-            # lat11 = int(map_pooled_size[0]-kurosio_latidx_range2[1]/pool_size)
-            # lon0 = int(map_pooled_size[1]-kurosio_lonidx_range[0]/pool_size)
-            # lon1 = int(map_pooled_size[1]-kurosio_lonidx_range[1]/pool_size)
-            #fileter_latlon = np.array([[lat00, lat11], [lon0, lon1]], dtype=np.int64)
             filter_latlon = np.array([[0, 0], [0, 0]], dtype=np.int64) #可視化して決める
             all_datas = {}
             for key in keys:
@@ -618,10 +617,12 @@ def analysis(plot=True, diff=True, save_gif=True, save_point_graph=True):
                 path = osp.join(path_log, 'point_yaxis_graph.png')
                 plt.savefig(path)
             
-    if diff:
-        diff_results(kl, al)
+    if EVALUATION:
+        eval_kalmanLog(kl, al)
+        # TODO NE, ais, jcope, kalmanのグラフ追加
+        #eval_kalmanLog2(kl, al)
 
-def eval_ais(kl, al):
+def eval_ais(al):
     # 船のpathの設定
     files = os.listdir(path_ship)
     # path内にあるファイルの一覧取得
@@ -825,7 +826,7 @@ def eval_ais(kl, al):
     savepath = "./logs/analysis_diff-ais-ship_grid.png"
     plt.savefig(savepath)
 
-def eval_jcope(kl, jl):
+def eval_jcope(jl):
     # 船のpathの設定
     files = os.listdir(path_ship)
     # path内にあるファイルの一覧取得
