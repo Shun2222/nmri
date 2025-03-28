@@ -77,7 +77,11 @@ python -m KalmanFilterProgram
 cd ~/workspace/nmri/KalmanFilter
 python -m AnalysisProgram 
 ```
-
+最後のまとめの結果は`config/config.ini`内`[ANALTSIS_PARAM]`下`PATH_LOG`を書き換えてから上記を実行
+```
+PATH_LOG="E:/shunsukeE//result//dummy_experiment"  // ダミーデータの実験結果
+#PATH_LOG="E:/shunsukeE//result//kalman_experiment" //カルマンフィルタの実験結果
+```
 # Folder Structure
 `tree -d -L 3`で表示
 
@@ -85,32 +89,48 @@ python -m AnalysisProgram
 |-- KalmanFilter
 |   |-- AnacondaFile
 |   |-- AnalysisProgram
+|   |   |-- __pycache__
+|   |   `-- utils
 |   |-- CreateAisCurProgram
-|   |-- CreoateShipCurProgram
+|   |   `-- __pycache__
+|   |-- CreateShipCurProgram
+|   |   `-- __pycache__
 |   |-- DockerFile
 |   |-- KalmanFilterProgram
+|   |   |-- __pycache__
 |   |   `-- utils
 |   |-- config
+|   |   `-- area_images
 |   |-- logs
+|   |   `-- before-shiplog
 |   |-- programの墓場
 |   |   |-- analysis_programs
 |   |   |-- check_programs
 |   |   |-- old_programs
 |   |   `-- shiplog_generator
 |   |-- test
+|   |   `-- __pycache__
 |   `-- utils
+|       `-- __pycache__
 |-- NMEA0183_decorder
 |   |-- AIS_Decorder
 |   |   |-- A1-AIS_ToyoJAXAFileoutToAis1
 |   |   |-- A2-AIS1ToAis2ManyFileRead
+|   |   |-- A2D-Ais2ToAis2-Dummy
+|   |   |-- A2D-Ais2ToAis2-SelectedDummyFromLargeValidData
+|   |   |-- A2D-Ais2ToAis2-SelectedDummyRandomly
+|   |   |-- A2K-Ais2ToAis2-Kuroshio
 |   |   |-- A3-Ais2ToAis3
 |   |   |-- A3-Ais2ToAis3-remove
+|   |   |-- A3-Ais2ToAis3-remove2
+|   |   |-- A3-Ais2ToAis3-remove2-deleteold
 |   |   |-- A4-Ais3-removeToMap
 |   |   |-- A4-Ais3ToAis4
 |   |   |-- A5-Ais4ToAisCurrLowMemConsumption
 |   |   |-- A5_2-Ais4_2ToAisCurrLowMemConsumption
 |   |   |-- A6-Ais4ToParameterSpeedUpCost
 |   |   |-- K1-Ais4ToCurVecForKalman
+|   |   |-- PureFlight\201i\203f\203R\201[\203_\201j
 |   |   |-- S-Ais4ToEachShipCurVecForKalman
 |   |   `-- oldfiles
 |   |-- JCOPE_decorder
@@ -118,6 +138,7 @@ python -m AnalysisProgram
 |   |   |-- Properties
 |   |   `-- obj
 |   `-- images
+`-- __pycache__
 ```
 
 
