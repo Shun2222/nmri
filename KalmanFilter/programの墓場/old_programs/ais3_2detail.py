@@ -49,7 +49,7 @@ def get_ais3_2detail(
 
 def get_all_ais3_2detail(
         path = r'E:\shunsukeE\data\ais\150901-1log\log',
-        filename = r'japan_20150901000000-20150901015959-21.ais3_2detail',
+        filename = r'japan_20150901000000-20150901015959(10).ais3_2_debug',
         max_data_num = 100
     ):
 
@@ -74,10 +74,13 @@ def get_all_ais3_2detail(
 
             if in_line:
                 if 'dtidx' in line:
+                    if "dtidx,latidx,lonidx,curN,curE,curLambda1,curLambda2,lambda1,lambda2,psi1,psi2" in line:
+                        continue
                     res = line.split(', ')
                     res = [r.split(':') for r in res]
                     ress = ""
                     for i in range(len(res)):
+                        print(res)
                         ress += res[i][0]+res[i][1]
                     data_infos.append(ress[:-1])
                     continue

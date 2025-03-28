@@ -18,7 +18,9 @@ params = paramManager.get_param()
 Q_values = ast.literal_eval(params["Q_VALUES"])
 N_lambda = int(params["N_LAMBDA"])
 N_D = int(params["N_D"])
-Min_lambda = int(params["MIN_LAMBDA"])
+Min_lambda1 = int(params["MIN_LAMBDA1"])
+Min_lambda2 = int(params["MIN_LAMBDA2"])
+Min_lambdas = [Min_lambda1, Min_lambda2]
 Min_D = int(params["MIN_D"])
 path_save = json.loads(params["PATH_SAVE"])
 use_shipvar = USE_SHIPVAR = params["USE_SHIPVAR"]

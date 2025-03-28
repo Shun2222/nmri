@@ -64,7 +64,11 @@ class KalmanLogLoader:
                     path = osp.join(self.log_path, fr'saver{key}201509{day:02}{hour:02}-{s}.pkl')
                 else:
                     path = osp.join(self.log_path, r"ais_files/" + fr"{key}201509{day:02}{hour:02}-{s}.pkl")
-                kalmanLog[dtidx] = pkl.load(open(path, 'rb'))
+                try:
+                    kalmanLog[dtidx] = pkl.load(open(path, 'rb'))
+                except:
+                    print(f"Cannot load from {path}")
+                    return kalmanLog 
             return kalmanLog 
 
         data = {}
@@ -91,7 +95,11 @@ class KalmanLogLoader:
                     path = osp.join(self.log_path, fr'saver{key}201509{day:02}{hour:02}-{s}.pkl')
                 else:
                     path = osp.join(self.log_path, r"ais_files/" + fr"{key}201509{day:02}{hour:02}-{s}.pkl")
-                kalmanLog[dtidx] = pkl.load(open(path, 'rb'))
+                try:
+                    kalmanLog[dtidx] = pkl.load(open(path, 'rb'))
+                except:
+                    print(f"Cannot load from {path}")
+                    return kalmanLog 
             return kalmanLog 
 
         data = {}

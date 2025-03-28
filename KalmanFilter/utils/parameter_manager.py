@@ -30,11 +30,14 @@ def config_get(in1, in2):
 
 def load_json_line_value(file_path, key):
     data = []
-    with open(file_path, 'r') as f:
-        for line in f:
-            json_object = json.loads(line)
-            if key in json_object: 
-                data.append(json_object[key])
+    try:
+        with open(file_path, 'r') as f:
+            for line in f:
+                json_object = json.loads(line)
+                if key in json_object: 
+                    data.append(json_object[key])
+    except:
+        assert False, f"Cannot open {file_path} or cannot find {key} in the path"
     return data
 
 def load_json_lines(file_path):
@@ -88,7 +91,8 @@ class ParameterManager():
         Q_values = ast.literal_eval(self.config_get_set_param("KALMAN_PARAM", "Q_VALUES"))
         N_lambda = int(self.config_get_set_param("KALMAN_PARAM", "N_LAMBDA"))
         N_D = int(self.config_get_set_param("KALMAN_PARAM", "N_D"))
-        Min_lambda = int(self.config_get_set_param("KALMAN_PARAM", "MIN_LAMBDA"))
+        Min_lambda1 = int(self.config_get_set_param("KALMAN_PARAM", "MIN_LAMBDA1"))
+        Min_lambda2 = int(self.config_get_set_param("KALMAN_PARAM", "MIN_LAMBDA2"))
         Min_D = int(self.config_get_set_param("KALMAN_PARAM", "MIN_D"))
         path_save = json.loads(self.config_get_set_param("KALMAN_PARAM", "PATH_SAVE"))
         USE_SHIPVAR = self.config_getboolean_set_param("KALMAN_PARAM", "USE_SHIPVAR")
@@ -105,9 +109,10 @@ class ParameterManager():
         HOUR = int(json.loads(self.config_get_set_param("ANALYSIS_PARAM", "HOUR")))
         MAX_DAY = int(json.loads(self.config_get_set_param("ANALYSIS_PARAM", "MAX_DAY")))
         MAX_HOUR = int(json.loads(self.config_get_set_param("ANALYSIS_PARAM", "MAX_HOUR")))
-        AIS_JCOPE_TEST = int(json.loads(self.config_getboolean_set_param("ANALYSIS_PARAM", "AIS_JCOPE_TEST")))
-        VISUALIZE = int(json.loads(self.config_getboolean_set_param("ANALYSIS_PARAM", "VISUALIZE")))
-        EVALUATION = int(json.loads(self.config_getboolean_set_param("ANALYSIS_PARAM", "EVALUATION")))
+        USE_PICKLE = self.config_getboolean_set_param("ANALYSIS_PARAM", "USE_PICKLE")
+        AIS_JCOPE_TEST = self.config_getboolean_set_param("ANALYSIS_PARAM", "AIS_JCOPE_TEST")
+        VISUALIZE = self.config_getboolean_set_param("ANALYSIS_PARAM", "VISUALIZE")
+        EVALUATION = self.config_getboolean_set_param("ANALYSIS_PARAM", "EVALUATION")
 
         AREA = load_json_line_value(osp.join(path_log, 'progress.json'), "AREA")[0]
         if AREA[0]=='"':

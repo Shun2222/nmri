@@ -57,16 +57,21 @@ def kalman_filter():
         elif use_ais_remove_bad_mmsi:
             ais_keys = ['cur1', 'lambda1', 'psi1', 'cur2', 'lambda2', 'psi2']
         else:
-            ais_keys = ['cur1', 'lambda1', 'phi1', 'cur2', 'lambda2', 'phi2']
+            #ais_keys = ['cur1', 'lambda1', 'psi1', 'cur2', 'lambda2', 'psi2']
+            ais_keys = ['Cur1', 'Lambda1', 'Phi1', 'Cur2', 'Lambda2', 'Phi2']
             
         ais_outfiles = save_dir + r"\ais_files"
         if not use_ais_remove_bad_mmsi:
-            AISLoader = atc.AISLoader
-            al = AISLoader(year, month, ais_outfiles, pkl_path=path_ais)
+            #AISLoader = atc.AISLoader
+            #al = AISLoader(year, month, ais_outfiles, pkl_path=path_ais)
+            #al.set_keys(ais_keys)
+            from utils.ais_loader import AISLoader
+            al = AISLoader(year, month, pool_size)
             al.set_keys(ais_keys)
+            al.load_path()
         else:
             from utils.ais_loader import AISLoader
-            al = AISLoader(year, month)
+            al = AISLoader(year, month, pool_size)
             al.set_keys(ais_keys)
             al.load_path()
 
@@ -82,8 +87,9 @@ def kalman_filter():
         if use_shipvar:
             data = al.load_ais_dtidx(dtidx)
         elif use_ais_remove_bad_mmsi:
-            data = al.load_ais_dtidx(dtidx)
+            data = al.load_cur(dtidx)
         else:
+            #data = al.load_ais_dtidx(dtidx)
             data = al.load_cur(dtidx)
 
         ais_cur1, ais_lambda1, ais_phi1, ais_cur2, ais_lambda2, ais_phi2\
@@ -116,7 +122,7 @@ def kalman_filter():
 
         tf_lambda2 = np.array([False]*len(lambda2))
         tf_lambda2[indices] = True
-        tf_lambda2 = (~np.isnan(lambda2)) & (lambda2>Min_lambda) & (tf_lambda2)
+        tf_lambda2 = (~np.isnan(lambda2)) & (lambda2>Min_lambda2) & (tf_lambda2)
         tf_ravel = (tf_ravel) & (tf_lambda2)
         tf = np.concatenate([tf_ravel, [True]])
         tf = tf.reshape(_N0+1, 1)
@@ -201,7 +207,8 @@ def kalman_filter():
                 elif use_ais_remove_bad_mmsi:
                     data  = al.load_ais_dtidx(dtidx)
                 else:
-                    data  = al.load_cur(dtidx)
+                    #data  = al.load_cur(dtidx)
+                    data  = al.load_ais_dtidx(dtidx)
                 ais_cur1, ais_lambda1, ais_phi1, ais_cur2, ais_lambda2, ais_phi2 = [data[key] for key in ais_keys]
                 ais_curs = [ais_cur1, ais_cur2]
                 ais_lambdas = [ais_lambda1, ais_lambda2]
@@ -238,16 +245,31 @@ def kalman_filter():
                     
                     pm.printline('Filtering step (Get lambda)')
                     lambda2 = kurosio_filter_pooled(ais_lambda, nan_map_pooled, is_pooled=True)
-                    indices = np.argsort(-lambda2)[0:N_lambda]
+                    if True:
+                        lambda2 = kurosio_filter_pooled(ais_lambda, nan_map_pooled, is_pooled=True)
+                        indices = np.argsort(-lambda2)[0:N_lambda]
 
-                    tf_lambda2 = np.array([False]*len(lambda2))
-                    tf_lambda2[indices] = True
-                    tf_lambda2 = (~np.isnan(lambda2)) & (lambda2>Min_lambda) & (tf_lambda2)
-                    tf_ravel = (tf_ravel) & (tf_lambda2)
-                    tf = np.concatenate([tf_ravel, [True]])
-                    tf = tf.reshape(_N0+1, 1)
-                    tf2 = np.concatenate([tf_ravel, tf_ravel])
-                    tf2 = np.concatenate([tf2, [True]])
+                        tf_lambda2 = np.array([False]*len(lambda2))
+                        tf_lambda2[indices] = True
+                        tf_lambda2 = (~np.isnan(lambda2)) & (lambda2>Min_lambdas[0 if target_name=='v1' else 1]) & (tf_lambda2)
+                        tf_ravel = (tf_ravel) & (tf_lambda2)
+                        tf = np.concatenate([tf_ravel, [True]])
+                        tf = tf.reshape(_N0+1, 1)
+                        tf2 = np.concatenate([tf_ravel, tf_ravel])
+                        tf2 = np.concatenate([tf2, [True]])
+                    else:
+                        lambda1 = kurosio_filter_pooled(ais_lambdas[1], nan_map_pooled, is_pooled=True)
+                        indices = np.argsort(-lambda1)[0:N_lambda]
+
+                        tf_lambda2 = np.array([False]*len(lambda2))
+                        tf_lambda2[indices] = True
+                        tf_lambda2 = (~np.isnan(lambda2)) & (lambda1>Min_lambdas[1]) & (tf_lambda2)
+                        tf_ravel = (tf_ravel) & (tf_lambda2)
+                        tf = np.concatenate([tf_ravel, [True]])
+                        tf = tf.reshape(_N0+1, 1)
+                        tf2 = np.concatenate([tf_ravel, tf_ravel])
+                        tf2 = np.concatenate([tf2, [True]])
+                        
 
                     pm.printline('Filtering step (Get phi)')
                     phi2 = kurosio_filter_pooled(ais_phi, nan_map_pooled, is_pooled=True)
@@ -312,7 +334,9 @@ def kalman_filter():
                     # TODO ちょっと知ってるのと違う，式的にRを写像してPに加えてる，Rの誤差も考慮するようにしてる?
                     #P_np = P.toarray()
                     #Ptf = sps.csr_matrix(P_np[tf2.ravel()])
-                    P = I_KH @ P @ I_KH.T + K @ R @ K.T
+                    #P = I_KH @ P @ I_KH.T + K @ R @ K.T
+                    P = I_KH @ P
+
                     #Ptf_np = Ptf.toarray()
                     #Ptf_np_prev = P_np[tf2.ravel()]
                     #for i in range(Ptf_np.shape[0]):
@@ -346,7 +370,7 @@ def kalman_filter():
                     #pkl.dump(R.toarray(), open(f'{save_dir}/saverR{year}{month:02}{day:02}{t:02}-{target_name}.pkl', 'wb'))
                     #pkl.dump(F.toarray(), open(f'{save_dir}/saverF{year}{month:02}{day:02}{t:02}-{target_name}.pkl', 'wb'))
                     pkl.dump(H.toarray(), open(f'{save_dir}/saverH{year}{month:02}{day:02}{t:02}-{target_name}.pkl', 'wb'))
-                    #pkl.dump(K.toarray(), open(f'{save_dir}/saverK{year}{month:02}{day:02}{t:02}-{target_name}.pkl', 'wb'))
+                    pkl.dump(K.toarray(), open(f'{save_dir}/saverK{year}{month:02}{day:02}{t:02}-{target_name}.pkl', 'wb'))
                     pkl.dump(jcor.toarray(), open(f'{save_dir}/saverJCOPECur{year}{month:02}{day:02}{t:02}-{target_name}.pkl', 'wb'))
                     pkl.dump((H@x).toarray(), open(f'{save_dir}/saverXCur{year}{month:02}{day:02}{t:02}-{target_name}.pkl', 'wb'))
                     pkl.dump(tf, open(f'{save_dir}/saverTarget{year}{month:02}{day:02}{t:02}-{target_name}.pkl', 'wb'))

@@ -21,13 +21,14 @@ DAY = json.loads(params["DAY"])
 HOUR = json.loads(params["HOUR"])
 MAX_DAY = json.loads(params["MAX_DAY"])
 MAX_HOUR = json.loads(params["MAX_HOUR"])
-AIS_JCOPE_TEST = shipLog_analysis = json.loads(params["AIS_JCOPE_TEST"])
-VISUALIZE = shipLog_analysis = json.loads(params["VISUALIZE"])
-EVALUATION = shipLog_analysis = json.loads(params["EVALUATION"])
+USE_PICKLE = use_pickle = params["USE_PICKLE"]
+AIS_JCOPE_TEST = shipLog_analysis = params["AIS_JCOPE_TEST"]
+VISUALIZE = shipLog_analysis = params["VISUALIZE"]
+EVALUATION = shipLog_analysis = params["EVALUATION"]
 
 # AREA params
 AREA = params["AREA"]
-USE_AIS_REMOVED_BAD_MMSI = use_ais_removed_bad_mmsi = params["USE_AIS_REMOVED_BAD_MMSI"]
+USE_AIS_REMOVE_BAD_MMSI = USE_AIS_REMOVED_BAD_MMSI = use_ais_removed_bad_mmsi = params["USE_AIS_REMOVED_BAD_MMSI"]
 pool_size = int(params["POOL_SIZE"])
 kurosio_lat_range1 = ast.literal_eval(params["KUROSIO_LAT_RANGE1"])
 kurosio_lat_range2 = ast.literal_eval(params["KUROSIO_LAT_RANGE2"])

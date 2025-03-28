@@ -201,3 +201,27 @@ for i in range(map_pooled_size[0]):
         if kurosio_pooled(map_pooled_size[0]-i, j) and nan_map_pooled[i][j]==nan_map_pooled[i][j]:
             kurosio_grid_pooled.append([i, j])
 kurosio_grid_pooled = np.array(kurosio_grid_pooled)
+
+def save_env_map(use_pool=True):
+    if use_pool:
+        target = kurosio_map_pooled 
+        target[kurosio_map_pooled!=kurosio_map_pooled] = 0
+        target = 100*target*nan_map_pooled
+    else:
+        target = kurosio_map 
+        target[kurosio_map!=kurosio_map] = 0
+        target = 100*target*nan_map
+    plt.imshow(target)
+    plt.savefig(f"./logs/{AREA}.png")
+    print("Saved env map in logs")
+
+def save_nan_map(use_pool=True):
+    if use_pool:
+        target = nan_map_pooled
+        ps = pool_size
+    else:
+        target = nan_map
+        ps = 1
+    plt.imshow(target)
+    plt.savefig(f"./logs/nan_map_{ps}.png")
+    print("Saved nan map in logs")

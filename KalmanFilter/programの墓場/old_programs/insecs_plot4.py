@@ -249,10 +249,10 @@ def insecs_plot(data_info, ss, ss2, cur, line_plot=True, save=False, savepath='.
     ax2 = fig.add_subplot(2, 4, 6)
     for ax in [ax0, ax01, ax02, ax1, ax2]:
         a = line_datas['tanHdg']
-        x = line_datas['vogN']
-        y = line_datas['vogE']
-        b = y - a*x 
-        x = np.arange(-5, 5, 0.1)
+        N = line_datas['vogN']
+        E = line_datas['vogE']
+        b = E - a*N 
+        x = np.arange(-25, 25, 0.1)
         y = [x*a[i]+b[i] for i in range(len(a))]
         line_type = list(set(a))
 
@@ -270,16 +270,25 @@ def insecs_plot(data_info, ss, ss2, cur, line_plot=True, save=False, savepath='.
             cmap = cm.get_cmap("hsv")
             color_value = np.array([mmsi_type[int(mmsi)] for mmsi in line_datas['mmsi']]) + 1
             colors = cmap( color_value / np.max(color_value))
+            tf = [int(mmsi)>= 999999990 for mmsi in line_datas['mmsi']]
             ploted_mmsi = []
             for i in range(len(y)):
                 idx = np.argmax(a[i]==line_type)
                 idx = idx if idx<len(colors) else len(colors)-1
                 #plt.plot(x, y[i], color=colors[idx])
                 if line_datas['mmsi'][i] in ploted_mmsi:
-                    ax.plot(x, y[i], color=colors[i])
+                    if tf[i]:
+                        c = "black"
+                    else:
+                        c = colors[i]
+                    ax.plot(x, y[i], color=c)
                 else:
+                    if tf[i]:
+                        c = "black"
+                    else:
+                        c = colors[i]
                     ploted_mmsi.append(line_datas['mmsi'][i])
-                    ax.plot(x, y[i], color=colors[i], label=int(line_datas['mmsi'][i]))
+                    ax.plot(x, y[i], color=c, label=int(line_datas['mmsi'][i]))
 
         cmap = cm.get_cmap("hsv")
         color_value = insec_datas['insec_type']+1
@@ -380,7 +389,7 @@ def insecs_plot(data_info, ss, ss2, cur, line_plot=True, save=False, savepath='.
 
 if __name__ == "__main__":
     #data_info, ss, ss2, cur = get_ais3_2detail()
-    data_infos, sss, ss2s, curs = get_all_ais3_2detail(max_data_num=1e3)
+    data_infos, sss, ss2s, curs = get_all_ais3_2detail(max_data_num=100)
     for data_info, ss, ss2, cur in zip(data_infos, sss, ss2s, curs):
-        insecs_plot(data_info, ss, ss2, cur, line_plot=False, save=True, savepath='images/test/test11')
+        insecs_plot(data_info, ss, ss2, cur, line_plot=False, save=True, savepath='images/test/dummy_data2')
     print(f'finished saving insecs plot.\n')
